@@ -47,6 +47,52 @@ def tickerSector(ticker):
     ticket = yf.Ticker(ticker)
     return ticket.info['sector']
 
+def stripRegistered(dataframe):
+    noTrademark = []
+    text = dataframe['Category']
+
+    for category in text:
+        cleanText = []
+        for item in category.split(" "):
+            item = item.strip('®')
+            item = item.strip('℠')
+            item = item.strip('™')
+            cleanText.append(item)
+
+        newString = " ".join(cleanText)
+
+        noTrademark.append(newString)
+
+    return noTrademark
+
+def replace(dataframe):
+    """
+    :param dataframe: dataframe to apply data postprocessing
+    :return: Dataframe with a post-processed Category Column
+    """
+    dataframe['Category'] = dataframe['Category'].str.replace("The Communication Services Select Sector SPDR Fund",
+                                                              "Communication Services")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Consumer Discretionary Select Sector SPDR Fund",
+                                                              "Consumer Discretionary")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Consumer Staples Select Sector SPDR Fund",
+                                                              "Consumer Staples")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Energy Select Sector SPDR Fund", "Energy")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Financial Select Sector SPDR Fund", "Financial")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Health Care Select Sector SPDR Fund", "Health Care")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Industrial Select Sector SPDR Fund", "Industrial")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Materials Select Sector SPDR Fund", "Materials")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Real Estate Select Sector SPDR Fund", "Real Estate")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Technology Select Sector SPDR Fund", "Technology")
+    dataframe['Category'] = dataframe['Category'].str.replace("The Utilities Select Sector SPDR Fund", "Utilities")
+    dataframe['Category'] = dataframe['Category'].str.replace("SPDR","")
+    dataframe['Category'] = dataframe['Category'].str.replace("ETF Trust", "")
+    dataframe['Category'] =dataframe['Category'].str.replace("ETF","")
+    dataframe['Category'] =dataframe['Category'].str.replace("Kensho","")
+    dataframe['Category'] = dataframe['Category'].str.replace("  "," ")
+    dataframe['Category'] = dataframe['Category'].str.strip()
+
+    return dataframe
+
 if __name__ == '__main__':
     url = "https://www.ssga.com/us/en/intermediary/etfs/library-content/products/fund-data/etfs/us/us-spdrs-allholdings-monthly.zip"
     root_directory_etfs = os.path.dirname(os.path.realpath(__file__))
@@ -65,6 +111,8 @@ if __name__ == '__main__':
         dfAppend = tickerGroups
         dfBase = dfBase.append(dfAppend,ignore_index=True)
 
+    dfBase['Category'] = stripRegistered(dfBase)
+    dfBase = replace(dfBase)
     dfBase.to_csv(root_directory_etfs+f'\TickerCategorization\{today}.csv',index=False)
 
 
